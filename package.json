@@ -1,0 +1,19 @@
+{
+  "name": "nop-include-in-binary",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonhymeine/nop-include-in-binary.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jonhymeine/nop-include-in-binary/issues"
+  },
+  "homepage": "https://github.com/jonhymeine/nop-include-in-binary#readme"
+}
