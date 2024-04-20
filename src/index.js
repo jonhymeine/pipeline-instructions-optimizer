@@ -6,21 +6,16 @@ const rl = readline.createInterface({
     output: process.stdout,
 });
 
-const Instruction = require('./models/Instruction');
+const InstructionController = require('./controllers/InstructionController');
+const instructionController = new InstructionController();
 
 const instructions = [];
 
 try {
     let data = fs.readFileSync('./input/input-file.txt', 'utf8');
-    data = data.replace(/\r/g, '');
-    const instructions_list = data.split('\n');
-    if (instructions_list[instructions_list.length - 1] == '') {
-        instructions_list.pop();
-    }
-    instructions_list.forEach((instruction) => {
-        instructions.push(new Instruction(instruction));
-    });
-    console.log(instructions);
+
+    instructionController.set_instructions(data);
+    console.log(instructionController.get_instructions());
 
 
 } catch (error) {
