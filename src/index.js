@@ -6,20 +6,22 @@ const rl = readline.createInterface({
     output: process.stdout,
 });
 
-let instructions;
+const Instruction = require('./models/Instruction');
+
+const instructions = [];
 
 try {
     let data = fs.readFileSync('./input/input-file.txt', 'utf8');
     data = data.replace(/\r/g, '');
-    instructions = data.split('\n');
-    if (instructions[instructions.length - 1] == '') {
-        instructions.pop();
+    const instructions_list = data.split('\n');
+    if (instructions_list[instructions_list.length - 1] == '') {
+        instructions_list.pop();
     }
+    instructions_list.forEach((instruction) => {
+        instructions.push(new Instruction(instruction));
+    });
     console.log(instructions);
-    console.log(instructions[1].substring(25));
-    console.log(instructions[1].substring(20, 25));
-    console.log(instructions[1].substring(12, 17));
-    console.log(instructions[1].substring(7, 12));
+
 
 } catch (error) {
     console.error(error);
