@@ -4,21 +4,25 @@ class Instruction {
      Instruction opcode
     */
     opcode;
+
     /**
      * @type {string}
      Instruction format
     */
     format = '';
+
     /**
      * @type {string}
      Instruction rd
     */
     rd = '';
+
     /**
      * @type {string}
      Instruction rs1
     */
     rs1 = '';
+
     /**
      * @type {string}
      Instruction rs2
