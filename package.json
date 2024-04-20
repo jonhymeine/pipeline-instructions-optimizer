@@ -1,5 +1,5 @@
 {
-  "name": "nop-include-in-binary",
+  "name": "pipeline-instructions-optimizer",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,12 +8,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jonhymeine/nop-include-in-binary.git"
+    "url": "git+https://github.com/jonhymeine/pipeline-instructions-optimizer.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jonhymeine/nop-include-in-binary/issues"
+    "url": "https://github.com/jonhymeine/pipeline-instructions-optimizer/issues"
   },
-  "homepage": "https://github.com/jonhymeine/nop-include-in-binary#readme"
+  "homepage": "https://github.com/jonhymeine/pipeline-instructions-optimizer#readme"
 }
