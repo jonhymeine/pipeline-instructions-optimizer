@@ -9,8 +9,6 @@ const rl = readline.createInterface({
 const InstructionController = require('./controllers/InstructionController');
 const instructionController = new InstructionController();
 
-const instructions = [];
-
 try {
     let data = fs.readFileSync('./input/input-file.txt', 'utf8');
 
