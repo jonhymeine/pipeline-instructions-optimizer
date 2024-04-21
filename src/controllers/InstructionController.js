@@ -15,8 +15,8 @@ class InstructionController {
     }
 
     /**
-     * @param {string} raw_instructions - List of RISC-V assembly binary instructions
      * Set instructions array from raw text
+     * @param {string} raw_instructions - List of RISC-V assembly binary instructions
      */
     set_instructions(raw_instructions) {
         raw_instructions = raw_instructions.replace(/\r/g, '');
