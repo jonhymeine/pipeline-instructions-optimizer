@@ -1,6 +1,12 @@
 class Instruction {
     /**
      * @type {string}
+     Raw instruction
+    */
+    raw_instruction;
+
+    /**
+     * @type {string}
      Instruction opcode
     */
     opcode;
@@ -33,6 +39,7 @@ class Instruction {
      * @param {string} instruction - RISC-V assembly binary instruction
      */
     constructor(instruction) {
+        this.raw_instruction = instruction;
         this.opcode = instruction.substring(25);
         if (this.opcode == '0110011') {
             this.format = 'R';
