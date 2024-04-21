@@ -1,4 +1,4 @@
-const Program = require('../models/AssemblyProgram');
+const AssemblyProgram = require('../models/AssemblyProgram');
 const PerformanceCalculator = require('../models/PerformanceCalculator');
 
 const readline = require('node:readline');
@@ -20,11 +20,11 @@ class ProgramController {
     files;
 
     /**
-     * Program object
-     * @type {Program}
+     * AssemblyProgram object
+     * @type {AssemblyProgram}
      * @private
      */
-    #program = new Program();
+    #program = new AssemblyProgram();
 
     /**
      * Exports the solution to a file
