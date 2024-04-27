@@ -4,13 +4,13 @@ class AssemblyProgram {
     /**
      * Instructions list
      * @type {Instruction[]}
-    */
+     */
     #instructions = [];
 
     /**
      * Get instructions array
      * @returns {Instruction[]} Instructions array
-    */
+     */
     get_instructions() {
         return this.#instructions;
     }
@@ -18,7 +18,7 @@ class AssemblyProgram {
     /**
      * Get raw instructions
      * @returns {string} List of RISC-V assembly binary instructions
-    */
+     */
     get_raw_instructions() {
         let raw_instructions = '';
         this.#instructions.forEach(instruction => {
@@ -30,7 +30,7 @@ class AssemblyProgram {
     /**
      * Set instructions array from raw text
      * @param {string} raw_instructions List of RISC-V assembly binary instructions
-    */
+     */
     set_instructions(raw_instructions) {
         raw_instructions = raw_instructions.replace(/\r/g, '');
         const instructions_list = raw_instructions.split('\n');
@@ -44,7 +44,7 @@ class AssemblyProgram {
 
     /**
      * Print instructions to console
-    */
+     */
     print_instructions() {
         this.#instructions.forEach(instruction => {
             console.log(instruction.raw_instruction);
@@ -55,25 +55,29 @@ class AssemblyProgram {
      * Create a NOP instruction
      * @returns {Instruction} NOP instruction
      * @private
-    */
+     */
     #create_nop() {
         return new Instruction('00000000000000000000000000010011');
     }
 
     /**
      * Add NOP instructions to the program
-    */
+     */
     add_nops_to_instructions() {
-        let in_use;
+        let in_use = [];
         for (let i = 0; i < this.#instructions.length; i++) {
-            if (this.#instructions[i].rs1 == in_use || this.#instructions[i].rs2 == in_use) {
+            if (this.#instructions[i].rs1 == in_use[0] || this.#instructions[i].rs2 == in_use[0]) {
                 this.#instructions.splice(i, 0, this.#create_nop(), this.#create_nop());
                 i += 2;
-                in_use = null;
+                in_use.splice(0, 1);
+            } else if (this.#instructions[i].rs1 == in_use[1] || this.#instructions[i].rs2 == in_use[1]) {
+                this.#instructions.splice(i, 0, this.#create_nop());
+                i++;
+                in_use.splice(1, 1);
             }
-
-            if (this.#instructions[i].format == 'I' || this.#instructions[i].format == 'R' || this.#instructions[i].format == 'U') {
-                in_use = this.#instructions[i].rd;
+            in_use.splice(0, 0, this.#instructions[i].rd);
+            if (in_use.length > 2) {
+                in_use.pop();
             }
         }
     }
