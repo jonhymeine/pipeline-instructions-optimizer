@@ -64,7 +64,7 @@ class AssemblyProgram {
      * Add NOP instructions to the program
      */
     add_nops_to_instructions() {
-        let in_use = [];
+        let in_use = ['', ''];
         for (let i = 0; i < this.#instructions.length; i++) {
             if (this.#instructions[i].rs1 == in_use[0] || this.#instructions[i].rs2 == in_use[0]) {
                 this.#instructions.splice(i, 0, this.#create_nop(), this.#create_nop());
@@ -75,7 +75,12 @@ class AssemblyProgram {
                 i++;
                 in_use.splice(1, 1);
             }
-            in_use.splice(0, 0, this.#instructions[i].rd);
+            if (this.#instructions[i].rd != null) {
+                in_use.splice(0, 0, this.#instructions[i].rd);
+                console;
+            } else {
+                in_use.splice(0, 0, '');
+            }
             if (in_use.length > 2) {
                 in_use.pop();
             }
