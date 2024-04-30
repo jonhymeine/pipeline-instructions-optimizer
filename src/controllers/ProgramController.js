@@ -86,9 +86,13 @@ class ProgramController {
             this.#assembly_program.add_nops_to_instructions();
             this.#after_solution = this.#performance_calculator.calculate_performance(this.#assembly_program, this.#clock_time);
 
+            if (!fs.existsSync(output_folder)) {
+                fs.mkdirSync(output_folder);
+            }
             const output_file_name = input_file_name.replace('.txt', '_output.txt');
             const content = this.#assembly_program.get_raw_instructions();
             fs.writeFileSync(`${output_folder}${output_file_name}`, content);
+            
             console.clear();
             this.#show_results(`${output_folder}${output_file_name}`);
             this.#request_file();
