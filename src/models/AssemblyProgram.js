@@ -75,9 +75,8 @@ class AssemblyProgram {
                 i++;
                 in_use.splice(1, 1);
             }
-            if (this.#instructions[i].rd != null) {
+            if (this.#instructions[i].rd != null && this.#instructions[i].rd != '00000') {
                 in_use.splice(0, 0, this.#instructions[i].rd);
-                console;
             } else {
                 in_use.splice(0, 0, '');
             }
