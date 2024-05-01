@@ -1,4 +1,4 @@
-# Pipeline Instructions Optimizer
+# Pipeline Instructions Protector
 
 The main goal of this program is to read an input text file that contains the binary instructions based on RISC-V assembly, and add NOP instructions where needed to optimize the CPU pipeline. Then, it creates an output text file that contains the optimized binary instructions.
 The execution also measures the ideal pipeline performance and the output file performance based on the pipeline's clock time provided by the user.
