@@ -92,7 +92,7 @@ class ProgramController {
             const output_file_name = input_file_name.replace('.txt', '_output.txt');
             const content = this.#assembly_program.get_raw_instructions();
             fs.writeFileSync(`${output_folder}${output_file_name}`, content);
-            
+
             console.clear();
             this.#show_results(`${output_folder}${output_file_name}`);
             this.#request_file();
@@ -157,7 +157,10 @@ class ProgramController {
             );
         });
 
-        let performance_comparison = this.#performance_calculator.compare_performance(this.#before_solution, this.#after_solution);
+        let performance_comparison = this.#performance_calculator.compare_performance(
+            this.#before_solution,
+            this.#after_solution
+        );
         performance_comparison = parseFloat(performance_comparison.toFixed(4));
         console.log(`The ideal pipeline is ${performance_comparison} times faster than the NOP's solution`);
 
