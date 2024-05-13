@@ -64,6 +64,7 @@ class AssemblyProgram {
      * Add NOP instructions to the program
      */
     add_nops_to_instructions() {
+        this.#set_branch_targets();
         let in_use = ['', ''];
         for (let i = 0; i < this.#instructions.length; i++) {
             if (this.#instructions[i].rs1 == in_use[0] || this.#instructions[i].rs2 == in_use[0]) {
@@ -84,6 +85,16 @@ class AssemblyProgram {
                 in_use.pop();
             }
         }
+    }
+
+    #set_branch_targets() {
+        this.#instructions.forEach((instruction, index) => {
+            if (instruction.format == 'B' || instruction.format == 'J') {
+                const target = index + instruction.decimal_immediate / 4;
+                instruction.branch_target = this.#instructions[target];
+                console.log(instruction.branch_target);
+            }
+        });
     }
 }
 
