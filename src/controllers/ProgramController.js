@@ -82,9 +82,15 @@ class ProgramController {
             const data = fs.readFileSync(`${input_folder}${input_file_name}`, 'utf8');
             this.#assembly_program.set_instructions(data);
 
-            this.#before_solution = this.#performance_calculator.calculate_performance(this.#assembly_program, this.#clock_time);
+            this.#before_solution = this.#performance_calculator.calculate_performance(
+                this.#assembly_program,
+                this.#clock_time
+            );
             this.#assembly_program.add_nops_to_instructions();
-            this.#after_solution = this.#performance_calculator.calculate_performance(this.#assembly_program, this.#clock_time);
+            this.#after_solution = this.#performance_calculator.calculate_performance(
+                this.#assembly_program,
+                this.#clock_time
+            );
 
             if (!fs.existsSync(output_folder)) {
                 fs.mkdirSync(output_folder);
@@ -93,7 +99,7 @@ class ProgramController {
             const content = this.#assembly_program.get_raw_instructions();
             fs.writeFileSync(`${output_folder}${output_file_name}`, content);
 
-            console.clear();
+            // console.clear();
             this.#show_results(`${output_folder}${output_file_name}`);
             this.#request_file();
         } catch (err) {
