@@ -4,8 +4,16 @@ class AssemblyProgram {
     /**
      * Instructions list
      * @type {Instruction[]}
+     * @private
      */
     #instructions = [];
+
+    /**
+     * Branch instructions list
+     * @type {Instruction[]}
+     * @private
+     */
+    #branch_instructions = [];
 
     /**
      * Get instructions array
@@ -65,16 +73,18 @@ class AssemblyProgram {
      */
     add_nops_to_instructions() {
         this.#set_branch_targets();
-        let in_use = ['', ''];
+        const in_use = ['', ''];
         for (let i = 0; i < this.#instructions.length; i++) {
-            if (this.#instructions[i].rs1 == in_use[0] || this.#instructions[i].rs2 == in_use[0]) {
+            if (this.#instructions[i].format == 'J' && ![0, 4].includes(this.#instructions[i].decimal_immediate)) {
+                in_use.splice(0, 2, '', '');
+            } else if (this.#instructions[i].rs1 == in_use[0] || this.#instructions[i].rs2 == in_use[0]) {
                 this.#instructions.splice(i, 0, this.#create_nop(), this.#create_nop());
                 i += 2;
-                in_use.splice(0, 1);
+                in_use.splice(0, 2, '', '');
             } else if (this.#instructions[i].rs1 == in_use[1] || this.#instructions[i].rs2 == in_use[1]) {
                 this.#instructions.splice(i, 0, this.#create_nop());
                 i++;
-                in_use.splice(1, 1);
+                in_use.splice(0, 1, '');
             }
             if (this.#instructions[i].rd != null && this.#instructions[i].rd != '00000') {
                 in_use.splice(0, 0, this.#instructions[i].rd);
@@ -85,14 +95,70 @@ class AssemblyProgram {
                 in_use.pop();
             }
         }
+        this.#add_branch_nops();
+        this.#recalculate_branch_targets();
     }
 
     #set_branch_targets() {
+        this.#branch_instructions = [];
         this.#instructions.forEach((instruction, index) => {
             if (instruction.format == 'B' || instruction.format == 'J') {
                 const target = index + instruction.decimal_immediate / 4;
                 instruction.branch_target = this.#instructions[target];
-                console.log(instruction.branch_target);
+                this.#branch_instructions.push(instruction);
+            }
+        });
+    }
+
+    #add_branch_nops() {
+        this.#branch_instructions.forEach(instruction => {
+            const instruction_index = this.#instructions.indexOf(instruction);
+            if (instruction_index == 0) {
+                return;
+            }
+            const previous_instruction = this.#instructions[instruction_index - 1];
+            const in_use = previous_instruction.rd || '';
+
+            const target = instruction.branch_target;
+            const target_index = this.#instructions.indexOf(target);
+
+            if (target.rs1 == in_use || target.rs2 == in_use) {
+                const target_previous = this.#instructions[target_index - 1];
+
+                if (target_previous.is_nop) {
+                    instruction.branch_target = target_previous;
+                } else {
+                    this.#instructions.splice(target_index, 0, this.#create_nop());
+                }
+            }
+        });
+    }
+
+    #recalculate_branch_targets() {
+        this.#branch_instructions.forEach(instruction => {
+            const instruction_index = this.#instructions.indexOf(instruction);
+            const target_index = this.#instructions.indexOf(instruction.branch_target_index);
+
+            const decimal_immediate = (target_index - instruction_index) * 4;
+            instruction.decimal_immediate = decimal_immediate;
+
+            let binary_immediate = decimal_immediate.toString(2);
+            let immediate_length;
+            if (instruction.format == 'B') {
+                immediate_length = 13;
+            } else if (instruction.format == 'J') {
+                immediate_length = 21;
+            }
+            if (decimal_immediate < 0) {
+                // refaz
+                binary_immediate = binary_immediate
+                    .slice(1)
+                    .split('')
+                    .map(bit => (bit == '0' ? '1' : '0'))
+                    .join('');
+                binary_immediate = binary_immediate.padStart(immediate_length, '1');
+            } else {
+                binary_immediate = binary_immediate.padStart(immediate_length, '0');
             }
         });
     }
