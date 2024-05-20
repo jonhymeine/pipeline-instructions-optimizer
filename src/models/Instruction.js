@@ -54,9 +54,19 @@ class Instruction {
     branch_target;
 
     /**
+     * @type {boolean}
+     * Is NOP instruction
+     * @default false
+     */
+    is_nop = false;
+
+    /**
      * @param {string} instruction - RISC-V assembly binary instruction
      */
     constructor(instruction) {
+        if (instruction == '00000000000000000000000000010011') {
+            this.is_nop = true;
+        }
         this.raw_instruction = instruction;
         this.opcode = instruction.substring(25);
         if (this.opcode == '0110011') {
