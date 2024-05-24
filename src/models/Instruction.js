@@ -37,6 +37,12 @@ class Instruction {
 
     /**
      * @type {string}
+     * Instruction funct3
+     */
+    funct3;
+
+    /**
+     * @type {string}
      * Binary immediate value
      */
     binary_immediate;
@@ -74,6 +80,7 @@ class Instruction {
             this.rd = instruction.substring(20, 25);
             this.rs1 = instruction.substring(12, 17);
             this.rs2 = instruction.substring(7, 12);
+            this.funct3 = instruction.substring(17, 20);
         } else if (
             this.opcode == '0010011' ||
             this.opcode == '0000011' ||
@@ -84,12 +91,14 @@ class Instruction {
             this.format = 'I';
             this.rd = instruction.substring(20, 25);
             this.rs1 = instruction.substring(12, 17);
+            this.funct3 = instruction.substring(17, 20);
             this.binary_immediate = instruction.substring(0, 12);
             this.decimal_immediate = this.#binary_to_decimal(this.binary_immediate);
         } else if (this.opcode == '1100011') {
             this.format = 'B';
             this.rs1 = instruction.substring(12, 17);
             this.rs2 = instruction.substring(7, 12);
+            this.funct3 = instruction.substring(17, 20);
             this.binary_immediate =
                 instruction.substring(0, 1) +
                 instruction.substring(24, 25) +
@@ -101,6 +110,7 @@ class Instruction {
             this.format = 'S';
             this.rs1 = instruction.substring(12, 17);
             this.rs2 = instruction.substring(7, 12);
+            this.funct3 = instruction.substring(17, 20);
             this.binary_immediate = instruction.substring(0, 7) + instruction.substring(20, 25);
             this.decimal_immediate = this.#binary_to_decimal(this.binary_immediate);
         } else if (this.opcode == '0110111' || this.opcode == '0010111') {
@@ -135,6 +145,31 @@ class Instruction {
             extended_binary = binary.padStart(32, 0);
         }
         return ~~Number.parseInt(extended_binary, 2);
+    }
+
+    /**
+     * Recreate raw instruction
+     */
+    recreate_raw_instruction() {
+        if (this.format == 'B') {
+            this.raw_instruction =
+                this.binary_immediate.substring(0, 1) +
+                this.binary_immediate.substring(2, 8) +
+                this.rs2 +
+                this.rs1 +
+                this.funct3 +
+                this.binary_immediate.substring(8, 12) +
+                this.binary_immediate.substring(1, 2) +
+                this.opcode;
+        } else if (this.format == 'J') {
+            this.raw_instruction =
+                this.binary_immediate.substring(0, 1) +
+                this.binary_immediate.substring(10, 20) +
+                this.binary_immediate.substring(9, 10) +
+                this.binary_immediate.substring(1, 9) +
+                this.rd +
+                this.opcode;
+        }
     }
 }
 

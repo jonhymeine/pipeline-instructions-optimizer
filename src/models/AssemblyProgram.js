@@ -137,29 +137,33 @@ class AssemblyProgram {
     #recalculate_branch_targets() {
         this.#branch_instructions.forEach(instruction => {
             const instruction_index = this.#instructions.indexOf(instruction);
-            const target_index = this.#instructions.indexOf(instruction.branch_target_index);
+            const target_index = this.#instructions.indexOf(instruction.branch_target);
 
             const decimal_immediate = (target_index - instruction_index) * 4;
             instruction.decimal_immediate = decimal_immediate;
 
-            let binary_immediate = decimal_immediate.toString(2);
             let immediate_length;
             if (instruction.format == 'B') {
                 immediate_length = 13;
             } else if (instruction.format == 'J') {
                 immediate_length = 21;
             }
+
+            let binary_immediate;
             if (decimal_immediate < 0) {
-                // refaz
-                binary_immediate = binary_immediate
-                    .slice(1)
+                binary_immediate = (~decimal_immediate)
+                    .toString(2)
                     .split('')
-                    .map(bit => (bit == '0' ? '1' : '0'))
+                    .map(bit => (bit == '1' ? '0' : '1'))
                     .join('');
                 binary_immediate = binary_immediate.padStart(immediate_length, '1');
             } else {
+                binary_immediate = decimal_immediate.toString(2);
                 binary_immediate = binary_immediate.padStart(immediate_length, '0');
             }
+
+            instruction.binary_immediate = binary_immediate;
+            instruction.recreate_raw_instruction();
         });
     }
 }
