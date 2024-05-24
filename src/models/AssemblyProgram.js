@@ -75,17 +75,25 @@ class AssemblyProgram {
         this.#set_branch_targets();
         const in_use = ['', ''];
         for (let i = 0; i < this.#instructions.length; i++) {
+            if (this.#instructions[i].opcode == '1100111') {
+                this.#instructions.splice(i + 1, 0, this.#create_nop());
+                this.#instructions.splice(i, 0, this.#create_nop());
+                in_use.splice(0, 1, '');
+                i++;
+            }
+
             if (this.#instructions[i].format == 'J' && ![0, 4].includes(this.#instructions[i].decimal_immediate)) {
                 in_use.splice(0, 2, '', '');
             } else if (this.#instructions[i].rs1 == in_use[0] || this.#instructions[i].rs2 == in_use[0]) {
                 this.#instructions.splice(i, 0, this.#create_nop(), this.#create_nop());
-                i += 2;
                 in_use.splice(0, 2, '', '');
+                i += 2;
             } else if (this.#instructions[i].rs1 == in_use[1] || this.#instructions[i].rs2 == in_use[1]) {
                 this.#instructions.splice(i, 0, this.#create_nop());
-                i++;
                 in_use.splice(0, 1, '');
+                i++;
             }
+
             if (this.#instructions[i].rd != null && this.#instructions[i].rd != '00000') {
                 in_use.splice(0, 0, this.#instructions[i].rd);
             } else {
