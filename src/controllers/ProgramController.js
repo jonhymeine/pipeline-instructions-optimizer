@@ -86,7 +86,7 @@ class ProgramController {
                 this.#assembly_program,
                 this.#clock_time
             );
-            this.#assembly_program.add_nops_to_instructions();
+            this.#assembly_program.reordering_solution();
             this.#after_solution = this.#performance_calculator.calculate_performance(
                 this.#assembly_program,
                 this.#clock_time

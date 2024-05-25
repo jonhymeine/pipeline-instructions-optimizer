@@ -69,44 +69,9 @@ class AssemblyProgram {
     }
 
     /**
-     * Add NOP instructions to the program
+     * Set branch targets
+     * @private
      */
-    add_nops_to_instructions() {
-        this.#set_branch_targets();
-        const in_use = ['', ''];
-        for (let i = 0; i < this.#instructions.length; i++) {
-            if (this.#instructions[i].opcode == '1100111') {
-                this.#instructions.splice(i + 1, 0, this.#create_nop());
-                this.#instructions.splice(i, 0, this.#create_nop());
-                in_use.splice(0, 1, '');
-                i++;
-            }
-
-            if (this.#instructions[i].format == 'J' && ![0, 4].includes(this.#instructions[i].decimal_immediate)) {
-                in_use.splice(0, 2, '', '');
-            } else if (this.#instructions[i].rs1 == in_use[0] || this.#instructions[i].rs2 == in_use[0]) {
-                this.#instructions.splice(i, 0, this.#create_nop(), this.#create_nop());
-                in_use.splice(0, 2, '', '');
-                i += 2;
-            } else if (this.#instructions[i].rs1 == in_use[1] || this.#instructions[i].rs2 == in_use[1]) {
-                this.#instructions.splice(i, 0, this.#create_nop());
-                in_use.splice(0, 1, '');
-                i++;
-            }
-
-            if (this.#instructions[i].rd != null && this.#instructions[i].rd != '00000') {
-                in_use.splice(0, 0, this.#instructions[i].rd);
-            } else {
-                in_use.splice(0, 0, '');
-            }
-            if (in_use.length > 2) {
-                in_use.pop();
-            }
-        }
-        this.#add_branch_nops();
-        this.#recalculate_branch_targets();
-    }
-
     #set_branch_targets() {
         this.#branch_instructions = [];
         this.#instructions.forEach((instruction, index) => {
@@ -114,16 +79,32 @@ class AssemblyProgram {
                 const target = index + instruction.decimal_immediate / 4;
                 instruction.branch_target = this.#instructions[target];
                 this.#branch_instructions.push(instruction);
+            } else if (instruction.opcode == '1100111') {
+                const target = index + instruction.decimal_immediate / 4;
+                instruction.branch_target = this.#instructions[target];
+                this.#branch_instructions.push(instruction);
             }
         });
     }
 
+    /**
+     * Add NOP instructions to branch instructions
+     * @private
+     */
     #add_branch_nops() {
         this.#branch_instructions.forEach(instruction => {
             const instruction_index = this.#instructions.indexOf(instruction);
+
+            if (instruction.opcode == '1100111') {
+                this.#instructions.splice(instruction_index + 1, 0, this.#create_nop());
+                this.#instructions.splice(instruction_index, 0, this.#create_nop());
+                return;
+            }
+
             if (instruction_index == 0) {
                 return;
             }
+
             const previous_instruction = this.#instructions[instruction_index - 1];
             const in_use = previous_instruction.rd || '';
 
@@ -142,6 +123,10 @@ class AssemblyProgram {
         });
     }
 
+    /**
+     * Recalculate branch targets
+     * @private
+     */
     #recalculate_branch_targets() {
         this.#branch_instructions.forEach(instruction => {
             const instruction_index = this.#instructions.indexOf(instruction);
@@ -173,6 +158,135 @@ class AssemblyProgram {
             instruction.binary_immediate = binary_immediate;
             instruction.recreate_raw_instruction();
         });
+    }
+
+    /**
+     * Add NOP instructions to the program
+     */
+    only_nop_solution() {
+        this.#set_branch_targets();
+        const in_use = ['', ''];
+        for (let i = 0; i < this.#instructions.length; i++) {
+            const instruction = this.#instructions[i];
+
+            if (instruction.opcode == '1100111') {
+                in_use.splice(0, 2, '', '');
+            }
+
+            if (instruction.format == 'J' && ![0, 4].includes(instruction.decimal_immediate)) {
+                in_use.splice(0, 2, '', '');
+            } else if (instruction.rs1 == in_use[0] || instruction.rs2 == in_use[0]) {
+                this.#instructions.splice(i, 0, this.#create_nop(), this.#create_nop());
+                in_use.splice(0, 2, '', '');
+                i += 2;
+            } else if (instruction.rs1 == in_use[1] || instruction.rs2 == in_use[1]) {
+                this.#instructions.splice(i, 0, this.#create_nop());
+                in_use.splice(0, 1, '');
+                i++;
+            }
+
+            if (instruction.rd != null && instruction.rd != '00000') {
+                in_use.splice(0, 0, instruction.rd);
+            } else {
+                in_use.splice(0, 0, '');
+            }
+            if (in_use.length > 2) {
+                in_use.pop();
+            }
+        }
+        this.#add_branch_nops();
+        this.#recalculate_branch_targets();
+    }
+
+    /**
+     * Apply forwarding solution, placing NOP instructions when necessary
+     */
+    forwarding_solution() {
+        this.#set_branch_targets();
+        for (let i = 0; i < this.#instructions.length; i++) {
+            const instruction = this.#instructions[i];
+            if (instruction.opcode == '0000011') {
+                const rd = instruction.rd;
+                if (i + 1 < this.#instructions.length) {
+                    const next_instruction = this.#instructions[i + 1];
+                    if (next_instruction.rs1 == rd || next_instruction.rs2 == rd) {
+                        this.#instructions.splice(i + 1, 0, this.#create_nop());
+                        i++;
+                    }
+                }
+            }
+        }
+        this.#recalculate_branch_targets();
+    }
+
+    /**
+     * Search for a substitute instruction
+     * @private
+     * @param {Instruction} conflict_instruction Instruction to be replaced
+     * @param {number} index Instruction index
+     * @param {[string, string]} in_use Registers in use
+     * @returns {Instruction} Substitute instruction
+     */
+    #search_substitute(index, in_use) {
+        for (let i = index; i < this.#instructions.length; i++) {
+            const instruction = this.#instructions[i];
+
+            for (let j = 0; j < this.#branch_instructions.length; j++) {
+                const branch_instruction = this.#branch_instructions[j];
+                if (branch_instruction.branch_target == instruction) {
+                    return this.#create_nop();
+                }
+            }
+
+            if (instruction.format == 'J' || instruction.format == 'B' || instruction.opcode == '0000011') {
+                return this.#create_nop();
+            }
+
+            if (!in_use.includes(instruction.rs1) && !in_use.includes(instruction.rs2)) {
+                const substitute_index = this.#instructions.indexOf(instruction);
+                this.#instructions.splice(substitute_index, 1);
+                return instruction;
+            }
+
+            if (instruction.rd != null && instruction.rd != '00000') {
+                in_use.splice(0, 0, instruction.rd);
+            }
+        }
+        return this.#create_nop();
+    }
+
+    /**
+     * Apply sorting solution, placing NOP instructions when necessary
+     */
+    reordering_solution() {
+        this.#set_branch_targets();
+        const in_use = ['', ''];
+        for (let i = 0; i < this.#instructions.length; i++) {
+            let instruction = this.#instructions[i];
+
+            if (instruction.opcode == '1100111') {
+                in_use.splice(0, 2, '', '');
+            }
+
+            if (instruction.format == 'J' && ![0, 4].includes(instruction.decimal_immediate)) {
+                in_use.splice(0, 2, '', '');
+            } else if (in_use.includes(instruction.rs1) || in_use.includes(instruction.rs2)) {
+                const aux_in_use = structuredClone(in_use);
+                instruction = this.#search_substitute(i, aux_in_use);
+                this.#instructions.splice(i, 0, instruction);
+            }
+
+            if (instruction.rd != null && instruction.rd != '00000') {
+                in_use.splice(0, 0, instruction.rd);
+            } else {
+                in_use.splice(0, 0, '');
+            }
+            if (in_use.length > 2) {
+                in_use.pop();
+            }
+        }
+        this.#add_branch_nops();
+        this.#recalculate_branch_targets();
     }
 }
 
