@@ -96,7 +96,9 @@ class AssemblyProgram {
             const instruction_index = this.#instructions.indexOf(instruction);
 
             if (instruction.opcode == '1100111') {
-                this.#instructions.splice(instruction_index + 1, 0, this.#create_nop());
+                if (instruction_index + 1 < this.#instructions.length) {
+                    this.#instructions.splice(instruction_index + 1, 0, this.#create_nop());
+                }
                 this.#instructions.splice(instruction_index, 0, this.#create_nop());
                 return;
             }
@@ -200,16 +202,20 @@ class AssemblyProgram {
 
     /**
      * Apply forwarding solution, placing NOP instructions when necessary
+     * @param {boolean} reorder_needed If the program needs to be reordered
      */
-    forwarding_solution() {
+    forwarding_solution(reorder_needed) {
         this.#set_branch_targets();
         for (let i = 0; i < this.#instructions.length; i++) {
-            const instruction = this.#instructions[i];
-            if (instruction.opcode == '0000011') {
+            let instruction = this.#instructions[i];
+            if (instruction.opcode == '0000011' && i + 1 < this.#instructions.length) {
                 const rd = instruction.rd;
-                if (i + 1 < this.#instructions.length) {
-                    const next_instruction = this.#instructions[i + 1];
-                    if (next_instruction.rs1 == rd || next_instruction.rs2 == rd) {
+                const next_instruction = this.#instructions[i + 1];
+                if (next_instruction.rs1 == rd || next_instruction.rs2 == rd) {
+                    if (reorder_needed) {
+                        instruction = this.#search_substitute(i + 1, [rd]);
+                        this.#instructions.splice(i + 1, 0, instruction);
+                    } else {
                         this.#instructions.splice(i + 1, 0, this.#create_nop());
                         i++;
                     }
@@ -228,6 +234,7 @@ class AssemblyProgram {
      * @returns {Instruction} Substitute instruction
      */
     #search_substitute(index, in_use) {
+        // console.log(this.#instructions[index], in_use);
         for (let i = index; i < this.#instructions.length; i++) {
             const instruction = this.#instructions[i];
 
@@ -238,16 +245,18 @@ class AssemblyProgram {
                 }
             }
 
-            if (instruction.format == 'J' || instruction.format == 'B' || instruction.opcode == '0000011') {
+            if (
+                instruction.format == 'J' ||
+                instruction.format == 'B' ||
+                (instruction.opcode == '0010111' && in_use.includes(instruction.rd))
+            ) {
                 return this.#create_nop();
             }
-
             if (!in_use.includes(instruction.rs1) && !in_use.includes(instruction.rs2)) {
                 const substitute_index = this.#instructions.indexOf(instruction);
                 this.#instructions.splice(substitute_index, 1);
                 return instruction;
             }
-
             if (instruction.rd != null && instruction.rd != '00000') {
                 in_use.splice(0, 0, instruction.rd);
             }
