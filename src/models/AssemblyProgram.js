@@ -248,6 +248,7 @@ class AssemblyProgram {
             if (
                 instruction.format == 'J' ||
                 instruction.format == 'B' ||
+                instruction.opcode == '1100111' ||
                 (instruction.opcode == '0010111' && in_use.includes(instruction.rd))
             ) {
                 return this.#create_nop();
