@@ -77,7 +77,7 @@ class ProgramController {
      * @private
      */
 
-    #export_solution(input_file_name) {
+    async #export_solution(input_file_name) {
         try {
             const data = fs.readFileSync(`${input_folder}${input_file_name}`, 'utf8');
             this.#assembly_program.set_instructions(data);
@@ -86,7 +86,8 @@ class ProgramController {
                 this.#assembly_program,
                 this.#clock_time
             );
-            this.#assembly_program.reordering_solution();
+            
+            await this.menu();
             this.#after_solution = this.#performance_calculator.calculate_performance(
                 this.#assembly_program,
                 this.#clock_time
@@ -179,6 +180,45 @@ class ProgramController {
     run() {
         console.clear();
         this.#ask_for_clock_time();
+    }
+
+    async menu() {
+        console.log('1 - Only Nops Solution\n'
+                  + '2 - Forwarding Solution with Reordering\n'
+                  + '3 - Forwarding Solution without Reordering\n'
+                  + '4 - Reordering Solution\n'
+                  + 'X - Exit\n'
+        );
+    
+        const option = await new Promise(resolve => {
+            rl.question('Select an option: ', option => {
+                resolve(option);
+            });
+        });
+    
+        switch (option) {
+            case '1':
+                this.#assembly_program.only_nop_solution();
+                break;
+            case '2':
+                this.#assembly_program.forwarding_solution(true);
+                break;
+            case '3':
+                this.#assembly_program.forwarding_solution(false);
+                break;
+            case '4':
+                this.#assembly_program.reordering_solution();
+                break;
+            case 'X':
+            case 'x':
+                rl.close();
+                break;
+            default:
+                console.clear();
+                console.error('Invalid option');
+                await this.menu();
+                break;
+        }
     }
 }
 
