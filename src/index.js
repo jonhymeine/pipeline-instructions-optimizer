@@ -1,3 +1,3 @@
 const ProgramController = require('./controllers/ProgramController');
 const program_controller = new ProgramController();
-program_controller.run();
+program_controller.run(true);
