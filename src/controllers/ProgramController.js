@@ -133,15 +133,13 @@ class ProgramController {
             });
 
             if (option == 'X' || option == 'x') {
-                rl.close();
                 return '';
             }
             const file_name = this.#files[option - 1];
             if (!this.#files.includes(file_name)) {
                 console.clear();
                 console.error('Invalid option\n');
-                this.#request_file();
-                return;
+                return this.#request_file();
             }
             return file_name;
         } catch (error) {
@@ -190,11 +188,11 @@ class ProgramController {
     async #request_method() {
         try {
             const question =
-                'Select a method:\n' +
+                '\nSelect a method:\n' +
                 '1 - Only Nops Solution\n' +
                 '2 - Forwarding Solution\n' +
                 '3 - Reordering Solution\n' +
-                '4 - Forwarding Solution with Reordering\n' +
+                '4 - Forwarding with Reordering Solution\n' +
                 'Option: ';
 
             const option = await new Promise(resolve => {
@@ -218,7 +216,7 @@ class ProgramController {
                     break;
                 default:
                     console.clear();
-                    console.error('Invalid option\n');
+                    console.error('Invalid option');
                     await this.#request_method();
                     break;
             }
