@@ -58,14 +58,17 @@ class ProgramController {
     /**
      * Asks the user for the pipeline's clock time
      * @private
-     * @returns {number} - Pipeline's clock time
+     * @returns {Promise<void>}
      */
-    #ask_for_clock_time() {
+    async #ask_for_clock_time() {
         try {
-            rl.question("Input the pipeline's clock time (in nanoseconds): ", time => {
-                this.#clock_time = time;
-                this.#request_file();
+            const question = "Input the pipeline's clock time (in nanoseconds): ";
+            const time = await new Promise(resolve => {
+                rl.question(question, time => {
+                    resolve(time);
+                });
             });
+            this.#clock_time = parseFloat(time);
         } catch (error) {
             console.error('Error reading clock time', error);
         }
@@ -75,16 +78,24 @@ class ProgramController {
      * Exports the solution to a file
      * @param {string} input_file_name - Input file name
      * @private
+     * @returns {Promise<void>}
      */
 
-    #export_solution(input_file_name) {
+    async #export_solution(input_file_name) {
         try {
             const data = fs.readFileSync(`${input_folder}${input_file_name}`, 'utf8');
             this.#assembly_program.set_instructions(data);
 
-            this.#before_solution = this.#performance_calculator.calculate_performance(this.#assembly_program, this.#clock_time);
-            this.#assembly_program.add_nops_to_instructions();
-            this.#after_solution = this.#performance_calculator.calculate_performance(this.#assembly_program, this.#clock_time);
+            this.#before_solution = this.#performance_calculator.calculate_performance(
+                this.#assembly_program,
+                this.#clock_time
+            );
+
+            await this.#request_method();
+            this.#after_solution = this.#performance_calculator.calculate_performance(
+                this.#assembly_program,
+                this.#clock_time
+            );
 
             if (!fs.existsSync(output_folder)) {
                 fs.mkdirSync(output_folder);
@@ -92,10 +103,10 @@ class ProgramController {
             const output_file_name = input_file_name.replace('.txt', '_output.txt');
             const content = this.#assembly_program.get_raw_instructions();
             fs.writeFileSync(`${output_folder}${output_file_name}`, content);
-            
+
             console.clear();
             this.#show_results(`${output_folder}${output_file_name}`);
-            this.#request_file();
+            this.run(false);
         } catch (err) {
             console.error(err);
         }
@@ -104,6 +115,7 @@ class ProgramController {
     /**
      * Asks the user to select a file
      * @private
+     * @returns {Promise<string>} File name
      */
     async #request_file() {
         try {
@@ -114,21 +126,24 @@ class ProgramController {
             });
             question += 'X - Exit\n\nOption: ';
 
-            await rl.question(question, option => {
-                if (option == 'X' || option == 'x') {
-                    rl.close();
-                    return;
-                }
-                const file_name = this.#files[option - 1];
-                if (!this.#files.includes(file_name)) {
-                    console.clear();
-                    console.error('Invalid file');
-                    this.#request_file();
-                    return;
-                }
-
-                this.#export_solution(file_name);
+            const option = await new Promise(resolve => {
+                rl.question(question, option => {
+                    resolve(option);
+                });
             });
+
+            if (option == 'X' || option == 'x') {
+                rl.close();
+                return;
+            }
+            const file_name = this.#files[option - 1];
+            if (!this.#files.includes(file_name)) {
+                console.clear();
+                console.error('Invalid option\n');
+                this.#request_file();
+                return;
+            }
+            return file_name;
         } catch (error) {
             console.error('Error reading files', error);
         }
@@ -157,19 +172,75 @@ class ProgramController {
             );
         });
 
-        let performance_comparison = this.#performance_calculator.compare_performance(this.#before_solution, this.#after_solution);
+        let performance_comparison = this.#performance_calculator.compare_performance(
+            this.#before_solution,
+            this.#after_solution
+        );
         performance_comparison = parseFloat(performance_comparison.toFixed(4));
         console.log(`The ideal pipeline is ${performance_comparison} times faster than the NOP's solution`);
 
-        console.log(`Output file created: ${output_path}`);
+        console.log(`Output file created: ${output_path}\n`);
     }
 
     /**
-     * Run the Program
+     * Asks the user to select a method
+     * @private
+     * @returns {Promise<void>}
      */
-    run() {
+    async #request_method() {
         console.clear();
-        this.#ask_for_clock_time();
+        try {
+            const question =
+                'Select a method:\n' +
+                '1 - Only Nops Solution\n' +
+                '2 - Forwarding Solution\n' +
+                '3 - Reordering Solution\n' +
+                '4 - Forwarding Solution with Reordering\n' +
+                'X - Exit\n\n' +
+                'Option: ';
+
+            const option = await new Promise(resolve => {
+                rl.question(question, option => {
+                    resolve(option);
+                });
+            });
+
+            switch (option) {
+                case '1':
+                    this.#assembly_program.only_nop_solution();
+                    break;
+                case '2':
+                    this.#assembly_program.forwarding_solution(false);
+                    break;
+                case '3':
+                    this.#assembly_program.reordering_solution();
+                    break;
+                case '4':
+                    this.#assembly_program.forwarding_solution(true);
+                    break;
+                case 'X':
+                case 'x':
+                default:
+                    console.clear();
+                    console.error('Invalid option\n');
+                    await this.#request_method();
+                    break;
+            }
+        } catch (error) {
+            console.error('Error reading method', error);
+        }
+    }
+    /**
+     * Run the Program
+     * @param {boolean} first_time - If it's the first time running the program
+     */
+    async run(first_time) {
+        if (first_time) {
+            console.clear();
+            await this.#ask_for_clock_time();
+        }
+        const file_name = await this.#request_file();
+        await this.#export_solution(file_name);
     }
 }
 
