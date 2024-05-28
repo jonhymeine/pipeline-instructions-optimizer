@@ -134,7 +134,7 @@ class ProgramController {
 
             if (option == 'X' || option == 'x') {
                 rl.close();
-                return;
+                return '';
             }
             const file_name = this.#files[option - 1];
             if (!this.#files.includes(file_name)) {
@@ -188,7 +188,6 @@ class ProgramController {
      * @returns {Promise<void>}
      */
     async #request_method() {
-        console.clear();
         try {
             const question =
                 'Select a method:\n' +
@@ -196,7 +195,6 @@ class ProgramController {
                 '2 - Forwarding Solution\n' +
                 '3 - Reordering Solution\n' +
                 '4 - Forwarding Solution with Reordering\n' +
-                'X - Exit\n\n' +
                 'Option: ';
 
             const option = await new Promise(resolve => {
@@ -218,8 +216,6 @@ class ProgramController {
                 case '4':
                     this.#assembly_program.forwarding_solution(true);
                     break;
-                case 'X':
-                case 'x':
                 default:
                     console.clear();
                     console.error('Invalid option\n');
@@ -240,6 +236,10 @@ class ProgramController {
             await this.#ask_for_clock_time();
         }
         const file_name = await this.#request_file();
+        if (file_name == '') {
+            rl.close();
+            return;
+        }
         await this.#export_solution(file_name);
     }
 }
